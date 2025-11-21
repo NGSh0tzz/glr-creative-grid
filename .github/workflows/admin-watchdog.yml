@@ -1,0 +1,44 @@
+name: "System Files Watchdog 🐶"
+
+# Draait alleen als systeem-kritieke bestanden worden aangepast
+on:
+  pull_request:
+    paths:
+      - 'index.html'
+      - 'style.css'
+      - 'script.js'
+      - '.github/**'
+
+permissions:
+  pull-requests: write # Nodig voor comments
+  issues: write        # Nodig voor labels (PRs zijn technisch gezien issues)
+
+jobs:
+  warn-and-label:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 🏷️ Add Warning Label
+        uses: actions/github-script@v6
+        with:
+          script: |
+            try {
+              await github.rest.issues.addLabels({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                labels: ["⚠️ SYSTEM FILES"] 
+              });
+            } catch (error) {
+              console.log("Kon label niet toevoegen. Bestaat het label wel in de repo?");
+            }
+
+      - name: 💬 Post Warning Comment
+        uses: actions/github-script@v6
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: "## 🛑 HALT! Systeembestanden gewijzigd.\n\n**@${{ github.actor }}**, er is gedetecteerd dat je wijzigingen hebt aangebracht in `index.html`, `style.css` of `script.js`.\n\n⚠️ **Dit mag meestal niet**, omdat dit de grid voor de hele klas kan breken.\n\n**Actie vereist:**\n1. Heb je dit per ongeluk gedaan? Draai deze bestanden terug.\n2. Heb je dit expres gedaan? Vraag toestemming aan de docent."
+            })

@@ -1,0 +1,52 @@
+name: "Tile Inspector 🕵️‍♂️"
+
+on: [pull_request]
+
+jobs:
+  quality-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: 🚫 Check for Forbidden Tags & Images
+        run: |
+          # 1. Check op HTML structuur tags en IFRAMES
+          if grep -rqE "<\/?(html|head|body|script|iframe)" tiles/; then
+             echo "❌ ALARM: Verboden HTML tags gevonden!"
+             grep -rnE "<\/?(html|head|body|script|iframe)" tiles/
+             exit 1
+          fi
+
+          # 2. Check op IMAGES (Creative Coding Constraint!)
+          # We blokkeren <img tags én CSS background-image url(...)
+          if grep -rqE "(<img|background-image:\s*url|background:\s*url)" tiles/; then
+             echo "❌ ALARM: Afbeeldingen zijn NIET toegestaan!"
+             echo "🎨 Dit is een Creative Coding challenge: Teken alles met CSS!"
+             grep -rnE "(<img|background-image:\s*url|background:\s*url)" tiles/
+             exit 1
+          fi
+
+      - name: 🤬 Check for Bad Language
+        run: |
+          # Een simpele lijst met woorden die we niet willen zien.
+          # Pas deze lijst aan naar eigen inzicht (gebruik lowercase).
+          forbidden_words="kanker|fuck|shit|bitch|cunt|tering|tyfus|hoer|nigger|hitler|nazi"
+          
+          if grep -riE "($forbidden_words)" tiles/; then
+             echo "❌ ALARM: Ongepast taalgebruik gedetecteerd."
+             echo "Hou het professioneel in de code comments en output."
+             # We laten expres NIET zien welk woord, om 'testen' te voorkomen
+             echo "Check je tekst."
+             exit 1
+          fi
+
+      - name: 🚫 Check for Fixed Positioning
+        run: |
+          if grep -rq "position:\s*fixed" tiles/; then
+             echo "❌ ALARM: position: fixed is verboden!"
+             exit 1
+          fi
+          
+      - name: ✅ All Checks Passed
+        run: echo "Code is schoon en veilig. Goed gedaan!"

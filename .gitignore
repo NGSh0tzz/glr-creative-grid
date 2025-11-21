@@ -1,0 +1,6 @@
+# Negeer systeembestanden
+.DS_Store
+Thumbs.db
+
+# Negeer de lokale bestandenlijst (wordt op server gegenereerd)
+filelist.txt
